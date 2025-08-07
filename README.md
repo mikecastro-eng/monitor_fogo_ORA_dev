@@ -68,9 +68,17 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
 
 * **Scripts de Coleta de Amostras:**
     * [Acessar Script no GEE](https://code.earthengine.google.com/b6599fcae20c305d66b46fcf8f6cb558)
+    * O processo de coletas deve mudar no scripts as linhas 50 e 51 do código
+        ** var analista_activo = 'rafaela';
+        ** var region = '5';
+    * As amostras devem ser coletadas como o exemplo siguente, e antes selecionar os poligonos burned ou unburned para coletar
+    *<p align="center">
+        <img src="src/imagens/exempllo_coleta.png" alt="Exmplo de Coleta" width="700"/>
+    </p>*
+
 
 * **Script de Análise de Amostras e *Feature Importance*:**
-    * [Acessar Script no GEE](https://code.earthengine.google.com/b6599fcae20c305d66b46fcf8f6cb558)
+    * [Acessar Script no colab googl](https://colab.research.google.com/drive/1d9CIyDg6UrvVqXgfzq9dl3WbK5tZmqB9?usp=sharing)
 
 * **Scripts de Classificação e Visualização:**
     * [Acessar Script no GEE](https://code.earthengine.google.com/b6599fcae20c305d66b46fcf8f6cb558)
