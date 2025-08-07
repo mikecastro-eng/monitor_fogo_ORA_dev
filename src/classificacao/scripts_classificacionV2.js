@@ -61,14 +61,16 @@ var lst_idCod_reg = list_regions.reduceColumns(ee.Reducer.toList(2), ['TILE', 'P
 var dict_analistas = {
     rafaela: [1, 3, 5, 9],
     matias:  [4, 7, 8, 10],
-    maria:  [2, 11, 12, 6]  
+    maria:  [2, 11, 12, 6],
+    maycon: [1,2,3,4,5,6,7,8,9,10,11,12]
 }
 var dict_projects = {
     rafaela: 'rafaela-cipriano',
     matias: 'dsak-463213',
-    maria: ''
+    maria: '',
+    maycon: 'maycon-castro'
 }
-var list_analista = ['maria', 'rafaela', 'matias'];
+// var list_analista = ['maria', 'rafaela', 'matias'];
 var analista_activo = 'rafaela';
 var region = '';
 var shp_basin = ee.FeatureCollection(param.asset_region_basin);
@@ -98,7 +100,7 @@ var mask_study_area = studyArea.reduceToImage(['id_code'], ee.Reducer.first());
 
 
 function export_raster_classified(raster_fire, name_export, export_to_drive){
-    var id_asset_exp = "projects/" + dict_projects[analista_activo] + "/layers_fire_ora/" + name_export;
+    var id_asset_exp = "projects/" + dict_projects[analista_activo] + "/assets/layers_fire_ora/" + name_export;
     var param_export = null;
     if (export_to_drive) {
         param_export = {
@@ -298,7 +300,12 @@ function make_export_raster(){
     print("exporting fire layer " );
     var date1 = date_inter.format("YYYY-MM-DD").getInfo();
     var name_export = "layer_fire_" + date1.slice(0, 7) + "_reg_" + region;
-    export_raster_classified(mapa_area_queimada, name_export, false)
+    mapa_area_queimada = mapa_area_queimada.set({
+                                            'month': month_activo,
+                                            'years': year_activo,
+                                            'region': region
+                                });
+    export_raster_classified(mapa_area_queimada.selfMask(), name_export, false);
 }
 
 
@@ -477,6 +484,23 @@ var checkbox_matias= ui.Checkbox({
         select_regiao.setPlaceholder('Selecione uma região');
     }
 });
+var checkbox_maycon= ui.Checkbox({
+    label: 'Analista Maycon',
+    value: false,
+    style: {margin: '10px 5px'},
+    onChange: function(){
+        analista_activo = 'maycon';
+        list_regions = [];
+        dict_analistas.matias.forEach(
+            function(item){
+                list_regions.push({label: 'região_' + item, value: item});
+            }
+        )
+        // Asynchronously get the list of band names.
+        select_regiao.items().reset(list_regions); 
+        select_regiao.setPlaceholder('Selecione uma região');
+    }
+});
 //list_analista = ['maria', 'rafaela', 'matias'];
 
 var panel_select= ui.Panel({
@@ -522,6 +546,7 @@ panel.add(nlabel_subtil1);
 panel.add(checkbox_maria);
 panel.add(checkbox_rafaela);
 panel.add(checkbox_matias);
+panel.add(checkbox_maycon);
 panel.add(panel_select);
 panel.add(nlabel_subtil2);
 panel.add(button_make_zoom);
