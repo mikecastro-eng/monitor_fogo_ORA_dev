@@ -1,12 +1,12 @@
 var visualize = {
     mosaico_pre: {
-        min: 50, 
-        max: 4000,
+        min: [0, 1000, 0], 
+        max: [3000, 4000, 3000],
         bands: ['SWIR2_pre', 'NIR_pre', 'Red_pre']
     },
     mosaico_post: {
-        min: 50, 
-        max: 4000,
+        min: [0, 1000, 0], 
+        max: [3000, 4000, 3000],
         bands: ['SWIR2_post', 'NIR_post', 'Red_post']
     },
     mosaico_dif: {

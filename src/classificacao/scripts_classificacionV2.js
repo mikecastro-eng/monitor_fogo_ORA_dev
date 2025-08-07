@@ -1,12 +1,12 @@
 var visualize = {
     mosaico_pre: {
-        min: 50, 
-        max: 4000,
+        min: [0, 1000, 0], 
+        max: [3000, 4000, 3000],
         bands: ['SWIR2_pre', 'NIR_pre', 'Red_pre']
     },
     mosaico_post: {
-        min: 50, 
-        max: 4000,
+        min: [0, 1000, 0], 
+        max: [3000, 4000, 3000],
         bands: ['SWIR2_post', 'NIR_post', 'Red_post']
     },
     mosaico_dif: {
@@ -63,52 +63,65 @@ var dict_analistas = {
     matias:  [4, 7, 8, 10],
     maria:  [2, 11, 12, 6]  
 }
+var dict_projects = {
+    rafaela: 'rafaela-cipriano',
+    matias: 'dsak-463213',
+    maria: ''
+}
 var list_analista = ['maria', 'rafaela', 'matias'];
 var analista_activo = 'rafaela';
-var region = '5';
+var region = '';
 var shp_basin = ee.FeatureCollection(param.asset_region_basin);
+shp_basin = shp_basin.map(function(feat){return feat.set('id_code', 1)});
 //print(shp_basin)
 var studyArea = shp_basin.filter(ee.Filter.eq('id_code_group', region));
 print("show geometry of área de estudo ", studyArea);
-
-
-var date_inic = '2023-10-01';  
-var date_inter = '2024-01-01'; 
-var date_end = '2024-01-31';  
+var year_activo = 2024;
+var month_activo = 1;
+var date_inter = ee.Date.fromYMD(year_activo, month_activo, 1); 
+var date_inic = date_inter.advance(-2, 'month');  
+var date_end = date_inter.advance(1, 'month');  
 var list_bands = ['B2', 'B3', 'B4', 'B8A', 'B11', 'B12'];
 var list_band_name = ['Blue', 'Green', 'Red', 'NIR', 'SWIR1', 'SWIR2'];
 var band_list = ['Blue', 'Green', 'Red', 'NIR', 'SWIR1', 'SWIR2', 'NBR2', 'NBR', 'NDVI'];
 var lst_band_totrain = ee.List([]);
-
+var samples_loaded = false;
 var show_fireCCI_MODI = false;
 var export_drive = true;
 var diff_image = ee.Image().toUint16();
-
+var mapa_area_queimada = null;
+var raster_classificado = false;
       
 //Map.centerObject(studyArea,10);
 // vamos convertir la área de estudo em uma mascara para sustituir la función clip por updateMask
-studyArea = studyArea.map(function(feat){return feat.set('id_code', 1)});
 var mask_study_area = studyArea.reduceToImage(['id_code'], ee.Reducer.first());
 
 
-function export_raster_classified(raster_fire, name_export, ngeom, export_to_drive){
-    var param_export;
+function export_raster_classified(raster_fire, name_export, export_to_drive){
+    var id_asset_exp = "projects/" + dict_projects[analista_activo] + "/layers_fire_ora/" + name_export;
+    var param_export = null;
     if (export_to_drive) {
         param_export = {
-            collection: raster_fire, 
-            description: name_export + '_SHP', 
-            folder: 'BAMT_GEE_feb25', 
-            fileFormat: 'SHP', 
-            selectors: ['BurnDate']
+            image: raster_fire,
+            description: name_export,
+            folder: '2024_01_Geofogo_Norte1',
+            region: studyArea, // ou geometry de interesse
+            scale: 30,
+            crs: 'EPSG:4326', // ou outro CRS desejado
+            maxPixels: 1e13
         }
-        Export.table.toDrive({});
+        Export.image.toDrive(param_export);
     }else{
         param_export = {
-            collection: raster_fire, 
-            description: name_export + '_SHP', 
-            assetId: 'BAMT_BA/'+ name_export + '_SHP'
+            image: raster_fire, 
+            description: name_export, 
+            assetId: id_asset_exp, 
+            region: studyArea, 
+            scale: 30, 
+            crs: 'EPSG:4326',
+            maxPixels: 1e13, 
         }
-        Export.table.toAsset(param_export);
+        Export.image.toAsset(param_export);
     }
     print(" exporting ⚡️ " +  name_export + '_SHP');
 }
@@ -136,10 +149,11 @@ function apply_spectral_index (image) {
 }
 
 
-
-
 function get_data_raster(){
-    
+
+    studyArea = shp_basin.filter(ee.Filter.eq('id_code_group', region));
+    print("show geometry of área de estudo ", studyArea);
+    mask_study_area = studyArea.reduceToImage(['id_code'], ee.Reducer.first());
     // Use 'cs' or 'cs_cdf', depending on your use-case; see docs for guidance.
     var QA_BAND = 'cs_cdf';
 
@@ -158,26 +172,17 @@ function get_data_raster(){
                         .linkCollection(csPlus, [QA_BAND])
                         .map(function(img) {
                             return img.updateMask(img.select(QA_BAND).gte(CLEAR_THRESHOLD));
-                        })
-                        //.map(apply_masking_cloud_s2);
+                        })                        
 
     var post_image = ee.ImageCollection('COPERNICUS/S2_HARMONIZED')
                         .filterBounds(studyArea)
                         .filterDate(date_inter, date_end)
                         .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 70))
                         .linkCollection(csPlus, [QA_BAND])
-                        //.map(apply_masking_cloud_s2);
 
-    
-    //print("show data pre cloud ", pre_image);
-    //print("show data post cloud ", post_image);
-    
     // addicionar todas as bandas de indices espectrais  NBR, NBR2, NDVI
     pre_image = pre_image.map(apply_spectral_index);
     post_image = post_image.map(apply_spectral_index);
-    
-    //print("show data pre", pre_image);
-    //print("show data post ", post_image);
     
     post_image = post_image.qualityMosaic('NBR');
     pre_image = pre_image.qualityMosaic('NBR');
@@ -195,7 +200,7 @@ function get_data_raster(){
     // make imagem de diferenção 
     var diff_image = ee.Image().toInt16();
     band_list.forEach(function(band_name){ 
-        print("processing banda " + band_name);
+        // print("processing banda " + band_name);
         diff_image = diff_image.addBands(post_image.select(band_name + "_post")
                             .subtract(pre_image.select(band_name + "_pre"))
                                     .rename(band_name + '_diff')    
@@ -214,31 +219,14 @@ function get_data_raster(){
 }
 
 
-
-var mosaico_train = get_data_raster();
-print(" conferir todas as bandas do mosaico construido ", mosaico_train);
-print("Número de bandas ", mosaico_train.bandNames());
-
+var list_regions = [];
+var mosaico_train = null;
 //focos NOAA20 y SNPP
-var noaa_viirs = ee.ImageCollection(param.asset_NOAA)
-                        .filter(ee.Filter.date(date_inter, date_end))
-                        .select( ['Bright_ti4'])
-                        .mosaic()
-                        .updateMask(mask_study_area);
+var noaa_viirs = null;
+var suomi_viirs = null;
+var samples_rois_month = null;
 
-//Map.setCenter(-113.2487, 59.3943, 8);
-Map.addLayer(noaa_viirs, visualize.map_NOA, 'NOAA');
-
-var suomi_viirs = ee.ImageCollection(param.asset_SNPP)
-                      .filter(ee.Filter.date(date_inter, date_end))
-                      .select( ['Bright_ti4'])
-                      .mosaic()
-                      .updateMask(mask_study_area);
-
-Map.addLayer(mosaico_train, visualize.mosaico_pre, 'Pre-mosaic');
-Map.addLayer(mosaico_train ,  visualize.mosaico_post, 'Post-mosaic');
-Map.addLayer(noaa_viirs, visualize.map_SNPP_NOAA, 'NOAA', false);
-Map.addLayer(suomi_viirs, visualize.map_SNPP_NOAA, 'Suomi', false);
+Map.setOptions("TERRAIN" );
 var bounder = ee.Image().byte().paint({
     featureCollection: shp_basin,
     color: 1,
@@ -247,50 +235,88 @@ var bounder = ee.Image().byte().paint({
 Map.addLayer(bounder, {palette: '#75440c'}, 'Bacias Analises');
 Map.centerObject(shp_basin, 4);
 
+function loading_images_zoom(load_imag){
+    print("variavel load data " + load_imag);
+    if (load_imag === true){
+        mosaico_train = get_data_raster();
+        print(" conferir todas as bandas do mosaico construido ", mosaico_train);
+        print("Número de bandas ", mosaico_train.bandNames());
+
+        //focos NOAA20 y SNPP
+        var noaa_viirs = ee.ImageCollection(param.asset_NOAA)
+                                .filter(ee.Filter.date(date_inter, date_end))
+                                .select( ['Bright_ti4'])
+                                .mosaic()
+                                .updateMask(mask_study_area);
+
+        var suomi_viirs = ee.ImageCollection(param.asset_SNPP)
+                            .filter(ee.Filter.date(date_inter, date_end))
+                            .select( ['Bright_ti4'])
+                            .mosaic()
+                            .updateMask(mask_study_area);
+        Map.addLayer(mosaico_train, visualize.mosaico_pre, 'Pre-mosaic');
+        Map.addLayer(mosaico_train ,  visualize.mosaico_post, 'Post-mosaic');
+        Map.addLayer(noaa_viirs, visualize.map_SNPP_NOAA, 'NOAA', false);
+        Map.addLayer(suomi_viirs, visualize.map_SNPP_NOAA, 'Suomi', false);
+        Map.centerObject(studyArea, 6);
+    }
+}
+
+function loading_samples(){
+    // projects/rafaela-cipriano/assets/samples/sample_2024-01-01_2024-01-31_region_9
+    var date1 = date_inter.format("YYYY-MM-DD").getInfo();    
+    var asset_id = "projects/" + dict_projects[analista_activo] + 
+                "/assets/samples/sample_" + date1 +
+                "_" + date1.slice(0, 8) + "31_region_" + region;
+    print("asset >> ", asset_id);
+    samples_rois_month = ee.FeatureCollection(asset_id);
+    print("show rois ", samples_rois_month.aggregate_histogram('class'));
+    samples_loaded = true;
+    Map.addLayer(samples_rois_month, {}, 'ROIs');
+}
+
+function make_classification(){
+
+    var lst_band_totrain = ['NBR_post', 'NBR2_post', 'NIR_post', 'NBR_diff', 'NDVI_post', 'NBR2_diff', 'NDVI_diff', 'SWIR2_diff', 'SWIR2_post', 'NIR_diff', 'Red_post', 'SWIR1_diff', 'SWIR1_post', 'Blue_pre'];
+    print(" as variavveis seram ", lst_band_totrain);
+    var param_classifer = {
+        numberOfTrees: 500, 
+        minLeafPopulation: 10
+    }
+    var RF_classifier = ee.Classifier.smileRandomForest(param_classifer)
+                                .setOutputMode('PROBABILITY')
+                                .train(samples_rois_month, 'class', lst_band_totrain)
+
+    // Export.classifier.toAsset(trained);
+    var classified = mosaico_train.select(lst_band_totrain).classify(RF_classifier, 'RF');
+    mapa_area_queimada = classified.gte(0.5);
+    Map.addLayer(mapa_area_queimada.selfMask(), visualize.map_fire, 'mapa queimadas');
+    raster_classificado = true
+}
+
+function make_export_raster(){
+    print("exporting fire layer " );
+    var date1 = date_inter.format("YYYY-MM-DD").getInfo();
+    var name_export = "layer_fire_" + date1.slice(0, 7) + "_reg_" + region;
+    export_raster_classified(mapa_area_queimada, name_export, false)
+}
+
 
 // Create a panel with vertical flow layout.
 var panel = ui.Panel({
     layout: ui.Panel.Layout.flow('vertical'),
-    style: {width: '250px'}
+    style: {width: '250px', stretch: 'horizontal'}
 });
-
-// if (studyArea.size().getInfo() === 0) {
-//     var nlabel = ui.Label('Please define a study area')
-//     print('Please define a study area');
-//     panel.add(nlabel);
-
-// } else {
-//     view_data();
-    
-//     var burned_tr = ee.FeatureCollection(burned).filterBounds(studyArea);
-//     var unburned_tr = ee.FeatureCollection(unburned).filterBounds(studyArea);
-    
-//     if (burned_tr.size().getInfo()===0) {
-//         var text_print = 'Please define some burned polygon(s)'
-//         print(text_print);
-//         var nlabel = ui.Label(text_print);        
-//         panel.add(nlabel)
-//     } else if (unburned_tr.size().getInfo()===0) {
-//         var text_print = 'Please define some unburned polygon(s)'
-//         print(text_print);
-//         var nlabel = ui.Label(text_print);
-//         panel.add(nlabel)
-//     } else {
-//         view_BA();
-        
-//     }
-// }
-
 
 // building tookit classify e analises
 // adding os wotdget
-
-
-var button_zoom = ui.Button({
-    label: 'Zoom to region',
+var button_loader = ui.Button({
+    label: 'ler amostras',
     style: {width: '230px'},
     onClick: function() {
-        Map.centerObject(studyArea);
+        if (region !== ''){ 
+            loading_samples();
+        }
     }
 });
 var button_export_BA_drive = ui.Button({
@@ -304,19 +330,36 @@ var button_export_BA_drive = ui.Button({
 var button_classificar = ui.Button({
     label: 'Gerar classificação',
     style: {width: '230px'},
-    onClick: function() {
-        download_BA(false);
+    onClick: function() {  
+        if (region !== ''){ 
+            if (samples_loaded === false){
+                loading_samples();
+                samples_loaded = true;
+            }
+            make_classification();
+        }
     }
 });
 var button_export_class = ui.Button({
     label: 'Export classificação',
     style: {width: '230px'},
-    // onClick: download_TIF()
+    onClick: function(){
+        if (raster_classificado === true){
+            make_export_raster()
+        }
+    }
 });
-var button_export_prob_mosaic = ui.Button({
-    label: 'Export Probability Mosaic',
+var button_make_zoom = ui.Button({
+    label: 'zoom região',
     style: {width: '230px'},
-    //onClick: export_prob_mosaic()
+    onClick: function(){
+      if (region !== ''){ 
+          print("valor de onclick do button em true" )
+          loading_images_zoom(true);
+      }
+      
+
+    }
 });
 var nlabel_titulo = ui.Label({
     value: "Toolkit Burned area",
@@ -332,6 +375,35 @@ var nlabel_subtil1 = ui.Label({
             width: '200px'
         },
 })
+
+var month_select_start= ui.Select({ 
+        items: [
+            { label: "janeiro", value: 1 },
+            { label: "fevereiro", value: 2},
+            { label: "março", value: 3},
+            { label: "abril", value: 4},
+            { label: "maio", value: 5},
+            { label: "junho", value: 6},
+            { label: "julho", value: 7},
+            { label: "agosto", value: 8},
+            { label: "setembro", value: 9},
+            { label: "outubro", value: 10},
+            { label: "novembro", value: 11},
+            { label: "dezembro", value: 12},
+        ],
+        placeholder: 'seleciona um mês',
+        value: 1,
+        style: {margin: '2px 2px', width: '120px'},
+        onChange: function(value){                  
+            month_activo = value;
+            date_inter = ee.Date.fromYMD(year_activo, month_activo, 1); 
+            date_inic = date_inter.advance(-2, 'month');  
+            date_end = date_inter.advance(1, 'month'); 
+            print("date inicial de analises ", date_inter);
+            print("date final de analises ", date_end);
+        }
+    })
+
 var img_logo = ee.Image(asset_logo).visualize({ min: 0, max: 255, bands: ['b3', 'b2', 'b1'] });
 var box_img =  img_logo.geometry();
 var thumbnail = ui.Thumbnail({
@@ -340,53 +412,124 @@ var thumbnail = ui.Thumbnail({
                         style: {height: '120px', width: '220px'}
                     })
 
-var checkbox_maria = ui.Checkbox('Analista Maria', false); 
-var checkbox_rafaela = ui.Checkbox('Analista Rafaela', false);
-var checkbox_matias= ui.Checkbox('Analista Matias', false);
-//list_analista = ['maria', 'rafaela', 'matias'];
-if (checkbox_maria.getValue()){
-    analista_activo = 'maria';
-}else{
-    if (checkbox_rafaela.getValue()){
-        analista_activo = 'rafaela';
-    }else{
-        if (checkbox_rafaela.getValue()){
-            analista_activo = 'matias'
-        }
+
+
+var select_regiao = ui.Select({
+    items: Object.keys(list_regions),
+    placeholder: 'Região',
+    style: {margin: '2px 2px', width: '120px'},
+    onChange: function(key) {
+        region = String(key);
+        print("região selecionada ", region);
     }
-}
+});
 
+var checkbox_maria = ui.Checkbox({
+    label: 'Analista Maria', 
+    value: false,
+    style: {margin: '10px 5px'},
+    onChange: function(){
+        analista_activo = 'maria';
+        list_regions = [];
+        print("lista de regions ", list_regions);        
+        dict_analistas.maria.forEach(
+            function(item){
+                list_regions.push({label: 'região_' + item, value: item});                
+            }
+        )
+        // Asynchronously get the list of band names.
+        select_regiao.items().reset(dict_region); 
+        select_regiao.setPlaceholder('Selecione uma região');
+    }
+}); 
+var checkbox_rafaela = ui.Checkbox({
+    label: 'Analista Rafaela', 
+    value: false,
+    style: {margin: '10px 5px'},
+    onChange: function(){
+        analista_activo = 'rafaela';
+        print("analista activos = " + analista_activo)
+        list_regions = [];
+        dict_analistas.rafaela.forEach(
+            function(item){
+                list_regions.push({label: 'região_' + item, value: item});
+            }
+        )
+        // Asynchronously get the list of band names.
+        select_regiao.items().reset(list_regions);    
+        select_regiao.setPlaceholder('Selecione uma região');    
+    }
+});
+var checkbox_matias= ui.Checkbox({
+    label: 'Analista Matias',
+    value: false,
+    style: {margin: '10px 5px'},
+    onChange: function(){
+        analista_activo = 'maria';
+        list_regions = [];
+        dict_analistas.matias.forEach(
+            function(item){
+                list_regions.push({label: 'região_' + item, value: item});
+            }
+        )
+        // Asynchronously get the list of band names.
+        select_regiao.items().reset(list_regions); 
+        select_regiao.setPlaceholder('Selecione uma região');
+    }
+});
+//list_analista = ['maria', 'rafaela', 'matias'];
 
+var panel_select= ui.Panel({
+    widgets: [
+      select_regiao, // O seletor de região 
+      month_select_start  // O seletor de mês aparecerá abaixo
+  ],
+  // Define o layout como um fluxo vertical.
+  layout: ui.Panel.Layout.flow('horizontal'),
+})
+
+var nlabel_subtil2 = ui.Label({
+    value: "Carrega os mosaicos",     // + region
+    style: {
+            fontSize: '12px',  
+            width: '200px'
+        },
+})
+var nlabel_subtil3 = ui.Label({
+    value: "Carrega as amostras" ,  // + region
+    style: {
+            fontSize: '12px',  
+            width: '200px'
+        },
+})
+var nlabel_subtil4 = ui.Label({
+    value: "Fazer a Classificação e mostrar",
+    style: {
+            fontSize: '12px',  
+            width: '200px'
+        },
+})
+var nlabel_subtil5 = ui.Label({
+    value: "Exportar Classificação",
+    style: {
+            fontSize: '12px',  
+            width: '200px'
+        },
+})
 panel.add(thumbnail);
 panel.add(nlabel_titulo);
 panel.add(nlabel_subtil1);
 panel.add(checkbox_maria);
 panel.add(checkbox_rafaela);
 panel.add(checkbox_matias);
-// panel.add(button_zoom);
-//panel.add(button_export_prob_mosaic);
-//panel.add(button_export_BA_drive)
+panel.add(panel_select);
+panel.add(nlabel_subtil2);
+panel.add(button_make_zoom);
+panel.add(nlabel_subtil3);
+panel.add(button_loader);
+panel.add(nlabel_subtil4);
 panel.add(button_classificar);
+panel.add(nlabel_subtil5);
 panel.add(button_export_class);
 
-
-// Add the panel to the ui.root.
 ui.root.add(panel);
-
-// //focos NOAA20 y SNPP
-// var noaa_viirs = ee.ImageCollection('NASA/LANCE/NOAA20_VIIRS/C2')
-//                         .filter(ee.Filter.date(date_2, date_3))
-//                         .select( ['Bright_ti4']);
-
-// //Map.setCenter(-113.2487, 59.3943, 8);
-// Map.addLayer(noaa_viirs, visualize.map_NOA, 'NOAA');
-
-// var suomi_viirs = ee.ImageCollection('NASA/LANCE/SNPP_VIIRS/C2')
-//                       .filter(ee.Filter.date(date_2, date_3))
-//                       .select( ['Bright_ti4']);
-
-//Map.setCenter(-113.2487, 59.3943, 8);
-// Map.addLayer(suomi_viirs, visualize.map_NOA, 'Suomi')
-
-// var Geom = ee.FeatureCollection ('projects/dsak-463213/assets/sep_geofogo/SETOR_NORTE_1')
-// Map.addLayer(Geom, {color: 'blue'}, 'geom')

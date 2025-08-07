@@ -67,7 +67,7 @@ O fluxograma abaixo resume visualmente todas as etapas do processo.
 Os scripts para cada uma das etapas principais do processo estão disponíveis nos links abaixo.
 
 * **Scripts de Coleta de Amostras:**
-    * [Acessar Script no GEE](https://code.earthengine.google.com/b6599fcae20c305d66b46fcf8f6cb558)
+    * [Acessar Script no GEE](https://code.earthengine.google.com/b7f760236bc7207e81a128f0269a3964)
     * O processo de coletas deve mudar no scripts as linhas 50 e 51 do código
         ** var analista_activo = 'rafaela';
         ** var region = '5';
@@ -81,4 +81,4 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
     * [Acessar Script no colab googl](https://colab.research.google.com/drive/1d9CIyDg6UrvVqXgfzq9dl3WbK5tZmqB9?usp=sharing)
 
 * **Scripts de Classificação e Visualização:**
-    * [Acessar Script no GEE](https://code.earthengine.google.com/e50b7ddc946fe7f4d0554d5f0eef40de)
+    * [Acessar Script no GEE](https://code.earthengine.google.com/eb2d59b6c81c930f1d3932a9e6a6d575)

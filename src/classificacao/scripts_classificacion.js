@@ -214,9 +214,7 @@ function view_data() {
                                             .filterBounds(studyArea)
                                             .filterDate(date_1, date_2)
                                             .map(apply_masking_cloud_s2);
-            post_image = ee.ImageCollection('COPERNICUS/S2_HARMONIZED')
-                                            .filterBounds(studyArea)
-                                            .filterDate(date_2, date_3)
+            post_image = ee.ImageCollectiondate1.slice(0, 8) .filterDate(date_2, date_3)
                                             .map(apply_masking_cloud_s2);
             break;
     }
@@ -309,7 +307,7 @@ function process_BA_download() {
                             crs: projection.crs,
                             crsTransform: projection.transform,
                             geometryType: 'polygon',
-                            eightConnected: false,
+                            eightConndate1.slice(0, 8)cted: false,
                             reducer: ee.Reducer.sum(),
                             tileScale: 16,
                             maxPixels: 1e12
