@@ -81,4 +81,4 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
     * [Acessar Script no colab googl](https://colab.research.google.com/drive/1d9CIyDg6UrvVqXgfzq9dl3WbK5tZmqB9?usp=sharing)
 
 * **Scripts de Classificação e Visualização:**
-    * [Acessar Script no GEE](https://code.earthengine.google.com/b6599fcae20c305d66b46fcf8f6cb558)
+    * [Acessar Script no GEE](https://code.earthengine.google.com/e50b7ddc946fe7f4d0554d5f0eef40de)
