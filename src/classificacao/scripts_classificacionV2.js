@@ -76,7 +76,7 @@ var region = '';
 var shp_basin = ee.FeatureCollection(param.asset_region_basin);
 shp_basin = shp_basin.map(function(feat){return feat.set('id_code', 1)});
 //print(shp_basin)
-var studyArea = shp_basin.filter(ee.Filter.eq('id_code_group', region));
+var studyAreastudyArea = shp_basin.filter(ee.Filter.eq('id_code_group', region));
 print("show geometry of área de estudo ", studyArea);
 var year_activo = 2024;
 var month_activo = 1;
@@ -279,7 +279,11 @@ function loading_samples(){
 
 function make_classification(){
 
-    var lst_band_totrain = ['NBR_post', 'NBR2_post', 'NIR_post', 'NBR_diff', 'NDVI_post', 'NBR2_diff', 'NDVI_diff', 'SWIR2_diff', 'SWIR2_post', 'NIR_diff', 'Red_post', 'SWIR1_diff', 'SWIR1_post', 'Blue_pre'];
+    var lst_band_totrain = [
+                    'NBR_post', 'NBR2_post', 'NIR_post', 'NBR_diff', 'NDVI_post', 'NBR2_diff', 
+                    'NDVI_diff', 'SWIR2_diff', 'SWIR2_post', 'NIR_diff', 'Red_post', 'SWIR1_diff', 
+                    'SWIR1_post', 'Blue_pre'
+                ];
     print(" as variavveis seram ", lst_band_totrain);
     var param_classifer = {
         numberOfTrees: 500, 
@@ -303,7 +307,8 @@ function make_export_raster(){
     mapa_area_queimada = mapa_area_queimada.set({
                                             'month': month_activo,
                                             'years': year_activo,
-                                            'region': region
+                                            'region': region,
+                                            'system:footprint': studyArea
                                 });
     export_raster_classified(mapa_area_queimada.selfMask(), name_export, false);
 }
@@ -491,7 +496,7 @@ var checkbox_maycon= ui.Checkbox({
     onChange: function(){
         analista_activo = 'maycon';
         list_regions = [];
-        dict_analistas.matias.forEach(
+        dict_analistas.maycon.forEach(
             function(item){
                 list_regions.push({label: 'região_' + item, value: item});
             }
