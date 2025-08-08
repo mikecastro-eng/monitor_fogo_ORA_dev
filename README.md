@@ -11,9 +11,9 @@ O fluxo de trabalho é dividido em quatro etapas principais: pré-processamento,
 Para otimizar o processamento e a análise por especialistas, a vasta área da Pan-Amazônia foi subdividida em regiões específicas de trabalho, conforme ilustrado abaixo. Esta abordagem permite a distribuição de tarefas e uma análise mais focada em cada localidade.
 
 *<p align="center">
-  <img src="src/imagens/divisao_bacias.png" alt="Mapa da divisão de regiões" width="600"/>
+  <img src="src/imagens/divisao_bacias.png" alt="Mapa da divisão de regiões" width="500"/>
 </p>*
-> **Nota:** Substitua `URL_DA_SUA_IMAGEM_1_AQUI` pelo link da sua Imagem 1.
+> **Figura 1: Poligono de pan-amazônia dividido pelas regiões hidrograficas adaptadas e númeradas para especialistas.
 
 ## ⚙️ Fluxo de Processamento
 
@@ -57,9 +57,9 @@ A etapa final utiliza as amostras e as bandas selecionadas para treinar um class
 O fluxograma abaixo resume visualmente todas as etapas do processo.
 
 *<p align="center">
-  <img src="src/imagens/fluxograma_processo_mapas_fogo.drawio.png" alt="Fluxograma do processo" width="700"/>
+  <img src="src/imagens/fluxograma_processo_mapas_fogo.drawio.png" alt="Fluxograma do processo" width="600"/>
 </p>*
-
+> **Figura 2: Fluxograma de trabalho para o mapeamento de áreas queimadas
 
 
 ## 🔗 Scripts no Google Earth Engine
@@ -73,9 +73,9 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
         ** var region = '5';
     * As amostras devem ser coletadas como o exemplo siguente, e antes selecionar os poligonos burned ou unburned para coletar
     *<p align="center">
-        <img src="src/imagens/exempllo_coleta.png" alt="Exmplo de Coleta" width="700"/>
+        <img src="src/imagens/exempllo_coleta.png" alt="Exmplo de Coleta" width="400"/>
     </p>*
-
+    > **Figura 3: Exemplo de coleta de amostras em áreas de queimadas e fora delas.
 
 * **Script de Análise de Amostras e *Feature Importance*:**
     * [Acessar Script no colab googl](https://colab.research.google.com/drive/1d9CIyDg6UrvVqXgfzq9dl3WbK5tZmqB9?usp=sharing)

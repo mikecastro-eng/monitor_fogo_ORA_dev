@@ -477,7 +477,7 @@ var checkbox_matias= ui.Checkbox({
     value: false,
     style: {margin: '10px 5px'},
     onChange: function(){
-        analista_activo = 'maria';
+        analista_activo = 'matias';
         list_regions = [];
         dict_analistas.matias.forEach(
             function(item){
@@ -546,14 +546,7 @@ var nlabel_subtil5 = ui.Label({
         },
 })
 panel.add(thumbnail);
-panel.add(nlabel_titulo);
-panel.add(nlabel_subtil1);
-panel.add(checkbox_maria);
-panel.add(checkbox_rafaela);
-panel.add(checkbox_matias);
-panel.add(checkbox_maycon);
-panel.add(panel_select);
-panel.add(nlabel_subtil2);
+panel.add(nlabel_titulo);Fluxograma de trabalho para o mapeamento de áreas queimadas
 panel.add(button_make_zoom);
 panel.add(nlabel_subtil3);
 panel.add(button_loader);
