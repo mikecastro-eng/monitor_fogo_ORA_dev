@@ -80,5 +80,8 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
 * **Script de Análise de Amostras e *Feature Importance*:**
     * [Acessar Script no colab googl](https://colab.research.google.com/drive/1d9CIyDg6UrvVqXgfzq9dl3WbK5tZmqB9?usp=sharing)
 
-* **Scripts de Classificação e Visualização:**
-    * [Acessar Script no GEE](https://code.earthengine.google.com/04784b7078ceecadd6d85f58a2d795cb)
+* **Scripts para o processo de Classificação e Visualização:**
+    * [Acessar Script no GEE](https://code.earthengine.google.com/fb51de4fc94724f7bc043106e3d5457e)
+
+* **Scripts para o processo de calculo de área:**
+    * [Acesar Scripts no GEE] (https://code.earthengine.google.com/d303ca8e550b45ba97519b09eac11398)

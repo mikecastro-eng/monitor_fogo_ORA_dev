@@ -68,7 +68,7 @@ var dict_projects = {
     rafaela: 'rafaela-cipriano',
     matias: 'dsak-463213',
     maria: '',
-    maycon: 'maycon-castro'
+    maycon: 'ee-diegosilvaotca'
 }
 // var list_analista = ['maria', 'rafaela', 'matias'];
 var analista_activo = 'rafaela';
@@ -546,7 +546,14 @@ var nlabel_subtil5 = ui.Label({
         },
 })
 panel.add(thumbnail);
-panel.add(nlabel_titulo);Fluxograma de trabalho para o mapeamento de áreas queimadas
+panel.add(nlabel_titulo);
+panel.add(nlabel_subtil1);
+panel.add(checkbox_maria);
+panel.add(checkbox_rafaela);
+panel.add(checkbox_matias);
+panel.add(checkbox_maycon);
+panel.add(panel_select);
+panel.add(nlabel_subtil2);
 panel.add(button_make_zoom);
 panel.add(nlabel_subtil3);
 panel.add(button_loader);
