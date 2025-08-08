@@ -84,4 +84,4 @@ Os scripts para cada uma das etapas principais do processo estão disponíveis n
     * [Acessar Script no GEE](https://code.earthengine.google.com/fb51de4fc94724f7bc043106e3d5457e)
 
 * **Scripts para o processo de calculo de área:**
-    * [Acesar Scripts no GEE] (https://code.earthengine.google.com/d303ca8e550b45ba97519b09eac11398)
+    *  [Acesar Scripts no GEE](https://code.earthengine.google.com/d303ca8e550b45ba97519b09eac11398)
